@@ -1,0 +1,5 @@
+python-telegram-bot 
+gspread 
+pdfplumber 
+oauth2client 
+gunicorn 
