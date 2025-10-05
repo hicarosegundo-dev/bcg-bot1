@@ -1,6 +1,6 @@
-python-telegram-bot 
-gspread 
-pdfplumber 
-oauth2client 
-gunicorn 
+python-telegram-bot
+gspread
+pdfplumber
+oauth2client
+gunicorn
 pandas==1.5.3
