@@ -14,12 +14,12 @@ from telegram.ext import (
     ContextTypes,
 )
 
-# --- Usando variáveis de ambiente --- 
-TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')  # Agora o token vem da variável de ambiente
-GOOGLE_CREDENTIALS = os.getenv('GOOGLE_CREDENTIALS')  # Credenciais do Google
+# --- SUAS CHAVES DE TESTE ---
+TOKEN = "8030056053:AAFvjsWFeQTPYnv8OAlj_6aeSl0D_7soqBg"
 SPREADSHEET_ID = "1oF5YBiyOyO9NVo2pdx_xq7CJb4P3lLr9ia_BbUqS4YM"
-# ------------------------------------
+# -----------------------------
 
+# Constante para o limite total da mensagem do Telegram
 MAX_MESSAGE_LENGTH = 4096
 
 # Configuração de logging
@@ -28,15 +28,17 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Estados da conversa para o cadastro (simplificado)
 (PEDINDO_NOME, PEDINDO_MATRICULA) = range(2)
 
+# Dicionário para armazenar dados dos usuários carregados da planilha
 usuarios_dados_completos = {}
 
 def carregar_usuarios_da_planilha():
     """Carrega os dados dos usuários da planilha Google Sheets para a memória."""
     try:
         scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-        creds = ServiceAccountCredentials.from_json_keyfile_dict(eval(GOOGLE_CREDENTIALS), scope)  # Usando a variável de ambiente
+        creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
         client = gspread.authorize(creds)
         
         sheet = client.open_by_key(SPREADSHEET_ID).sheet1
@@ -65,7 +67,7 @@ def adicionar_usuario_na_planilha(pm, nome, matricula, id_telegram):
     """Adiciona uma nova linha com os dados de um novo usuário na planilha."""
     try:
         scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
-        creds = ServiceAccountCredentials.from_json_keyfile_dict(eval(GOOGLE_CREDENTIALS), scope)  # Usando a variável de ambiente
+        creds = ServiceAccountCredentials.from_json_keyfile_name("credentials.json", scope)
         client = gspread.authorize(creds)
         sheet = client.open_by_key(SPREADSHEET_ID).sheet1
         
@@ -281,8 +283,8 @@ def main() -> None:
     application.add_handler(MessageHandler(filters.Document.ALL & ~filters.COMMAND, handle_pdf))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
     
-    logger.info("O bot BCG está rodando. Pressione Ctrl+C para parar.")
-    application.run_polling(allowed_updates=Update.ALL_TYPES)
+    port = os.environ.get('PORT', 8000)  # Configuração da porta
+    application.run_polling(port=port)  # Inicia o bot escutando na porta configurada
 
 if __name__ == '__main__':
     main()
