@@ -1,46 +1,43 @@
 import logging
 from telegram import Update
-from telegram.ext import Updater, CommandHandler, CallbackContext, Application
-import pandas as pd
+from telegram.ext import Application, CommandHandler, ContextTypes
+import os
 
-# Configurações do logging
+# Habilitando logs para depuração
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Função de start do bot
-def start(update: Update, context: CallbackContext) -> None:
-    update.message.reply_text("Olá! Eu sou o bot BCG.")
+# Função de comando para /start
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await update.message.reply_text('Olá! Eu sou o Bot.')
 
-# Função de comando help
-def help_command(update: Update, context: CallbackContext) -> None:
-    update.message.reply_text("Comandos disponíveis:\n/start - Iniciar o bot\n/help - Comandos de ajuda")
+# Função principal para rodar o bot
+async def main():
+    # Adicione o token do seu bot aqui
+    token = 'SEU_TOKEN_DO_BOT'
+    app = Application.builder().token(token).build()
 
-# Função para carregar os dados da planilha
-def carregar_planilha():
-    try:
-        # Supondo que 'credentials.json' seja a planilha que você usa
-        df = pd.read_excel('credenciais.xlsx')
-        logger.info("Planilha carregada. {} usuários cadastrados.".format(len(df)))
-    except Exception as e:
-        logger.error(f"Erro ao carregar a planilha: {e}")
+    # Registrando o comando /start
+    app.add_handler(CommandHandler("start", start))
 
-# Função principal que inicializa o bot
-def main():
-    # Carregar a planilha ao iniciar
-    carregar_planilha()
-
-    # Iniciar o aplicativo com o Token do bot
-    token = '8030056053:AAFvjsWFeQTPYnv8OAlj_6aeSl0D_7soqBg'  # Coloque seu token do Telegram aqui
-    application = Application.builder().token(token).build()
-
-    # Adicionar os comandos
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CommandHandler("help", help_command))
-
-    # Iniciar o bot
-    logger.info("O bot BCG está rodando. Pressione Ctrl+C para parar.")
-    application.run_polling()  # Sem a necessidade de passar 'port'
+    # Rodando o bot
+    logging.info("O bot está rodando... Pressione Ctrl+C para parar.")
+    await app.run_polling()
 
 if __name__ == '__main__':
-    main()
+    import sys
+    from os import environ
+
+    # Certifique-se de que o bot vai rodar na porta correta no Render
+    port = int(environ.get("PORT", 5000))  # Usando a variável de ambiente PORT, com valor padrão 5000
+    logger.info(f"Usando a porta {port} para a execução")
+
+    # Rodando o bot
+    from aiohttp import web
+    app = web.Application()
+
+    # Inicializando o bot na porta especificada
+    loop = asyncio.get_event_loop()
+    loop.create_task(main())
+    web.run_app(app, host="0.0.0.0", port=port)
