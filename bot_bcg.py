@@ -1,41 +1,46 @@
 import logging
-from telegram.ext import Application, CommandHandler
-import os
-import json
+from telegram import Update
+from telegram.ext import Updater, CommandHandler, CallbackContext, Application
+import pandas as pd
 
-# Configuração de log para depuração
-logging.basicConfig(level=logging.INFO)
+# Configurações do logging
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Função que será chamada quando o comando /start for enviado
-async def start(update, context):
-    await update.message.reply_text('Olá! Eu sou o seu bot.')
+# Função de start do bot
+def start(update: Update, context: CallbackContext) -> None:
+    update.message.reply_text("Olá! Eu sou o bot BCG.")
 
-def main():
-    # Tente carregar o arquivo de credenciais
+# Função de comando help
+def help_command(update: Update, context: CallbackContext) -> None:
+    update.message.reply_text("Comandos disponíveis:\n/start - Iniciar o bot\n/help - Comandos de ajuda")
+
+# Função para carregar os dados da planilha
+def carregar_planilha():
     try:
-        credentials_path = 'credentials.json'  # Caminho para o arquivo de credenciais
-        # Aqui você pode adicionar a lógica para ler e carregar a planilha ou fazer outra operação
-        with open(credentials_path, 'r') as file:
-            credentials = json.load(file)
-            logger.info("Planilha carregada com sucesso.")
-            # Aqui você pode adicionar qualquer lógica adicional que precise com os dados do arquivo
-    except FileNotFoundError:
-        logger.error(f"Erro ao carregar a planilha: Arquivo {credentials_path} não encontrado.")
-        return
-    except json.JSONDecodeError:
-        logger.error("Erro ao decodificar o arquivo JSON.")
-        return
+        # Supondo que 'credentials.json' seja a planilha que você usa
+        df = pd.read_excel('credenciais.xlsx')
+        logger.info("Planilha carregada. {} usuários cadastrados.".format(len(df)))
+    except Exception as e:
+        logger.error(f"Erro ao carregar a planilha: {e}")
 
-    # Inicializa o bot com o token
-    application = Application.builder().token('8030056053:AAFvjsWFeQTPYnv8OAlj_6aeSl0D_7soqBg').build()
+# Função principal que inicializa o bot
+def main():
+    # Carregar a planilha ao iniciar
+    carregar_planilha()
 
-    # Adiciona o comando /start
+    # Iniciar o aplicativo com o Token do bot
+    token = '8030056053:AAFvjsWFeQTPYnv8OAlj_6aeSl0D_7soqBg'  # Coloque seu token do Telegram aqui
+    application = Application.builder().token(token).build()
+
+    # Adicionar os comandos
     application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("help", help_command))
 
-    # Inicia o bot
-    logger.info("O bot está rodando.")
-    application.run_polling()
+    # Iniciar o bot
+    logger.info("O bot BCG está rodando. Pressione Ctrl+C para parar.")
+    application.run_polling()  # Sem a necessidade de passar 'port'
 
 if __name__ == '__main__':
     main()
